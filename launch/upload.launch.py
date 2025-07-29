@@ -11,7 +11,7 @@ def generate_launch_description():
     iai_tiago_description_path = get_package_share_directory('iai_tiago_description')
 
     # File paths
-    urdf_file = os.path.join(iai_tiago_description_path, 'urdf', 'tiago_dual.urdf')
+    urdf_file = os.path.join(iai_tiago_description_path, 'urdf', 'tiago_from_our_robot.urdf')
 
     return LaunchDescription([
         Node(
