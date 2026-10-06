@@ -72,6 +72,18 @@
   <material name="pal/DarkGrey">
     <color rgba="0.29804 0.29804 0.29804 1"/>
   </material>
+  
+  <gazebo>
+    <plugin filename="libgz_ros2_control-system.so"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find tiago_arise_navigation)/config/tiago_control.yaml</parameters>
+      <ros>
+        <namespace>/robot</namespace>
+      </ros>
+    </plugin>
+  </gazebo>
+  
+  
   <!-- MACRO DEFINITION -->
   <!-- MACRO DEFINITION -->
   <!-- TODO Compute real wheel max velocity -->
@@ -105,13 +117,7 @@
           </accel>
         </noise>
       </imu>
-      <plugin filename="libgazebo_ros_imu_sensor.so" name="base_imu">
-        <ros>
-          <namespace></namespace>
-          <!-- publish to /imu/data -->
-          <remapping>~/out:=base_imu</remapping>
-        </ros>
-      </plugin>
+      <topic>base_imu</topic>
     </sensor>
   </gazebo>
   <!-- Laser -->
@@ -142,7 +148,7 @@
     <child link="base_laser_link"/>
   </joint>
   <gazebo reference="base_laser_link">
-    <sensor name="base_laser" type="gpu_ray">
+    <sensor name="base_laser" type="gpu_lidar">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>10</update_rate>
       <visualize>true</visualize>
@@ -168,14 +174,8 @@
           <stddev>0.01</stddev>
         </noise>
       </ray>
-      <plugin filename="libgazebo_ros_ray_sensor.so" name="base_laser">
-        <ros>
-          <namespace></namespace>
-          <remapping>~/out:=scan_raw</remapping>
-        </ros>
-        <output_type>sensor_msgs/LaserScan</output_type>
-        <frame_name>base_laser_link</frame_name>
-      </plugin>
+      <topic>scan_raw</topic>
+      <frame_id>base_laser_link</frame_id>
     </sensor>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
@@ -203,7 +203,7 @@
     <sensor name="base_sonar_03" type="gpu_ray">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>5</update_rate>
-      <visualize>false</visualize>
+      <visualize>true</visualize>
       <ray>
         <scan>
           <horizontal>
@@ -230,18 +230,12 @@
           <stddev>0.005</stddev>
         </noise>
       </ray>
-      <plugin filename="libgazebo_ros_ray_sensor.so" name="base_sonar_03_gazebo_ros_range">
-        <ros>
-          <namespace></namespace>
-          <remapping>~/out:=sonar_base</remapping>
-        </ros>
-        <output_type>sensor_msgs/Range</output_type>
-        <radiation_type>ultrasound</radiation_type>
-        <frame_name>base_sonar_03_link</frame_name>
-      </plugin>
+      <topic>sonar_base_03</topic>
+      <frame_id>base_sonar_03_link</frame_id>
     </sensor>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
+  
   <link name="base_sonar_02_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -266,7 +260,7 @@
     <sensor name="base_sonar_02" type="gpu_ray">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>5</update_rate>
-      <visualize>false</visualize>
+      <visualize>true</visualize>
       <ray>
         <scan>
           <horizontal>
@@ -293,15 +287,8 @@
           <stddev>0.005</stddev>
         </noise>
       </ray>
-      <plugin filename="libgazebo_ros_ray_sensor.so" name="base_sonar_02_gazebo_ros_range">
-        <ros>
-          <namespace></namespace>
-          <remapping>~/out:=sonar_base</remapping>
-        </ros>
-        <output_type>sensor_msgs/Range</output_type>
-        <radiation_type>ultrasound</radiation_type>
-        <frame_name>base_sonar_02_link</frame_name>
-      </plugin>
+      <topic>sonar_base_02</topic>
+      <frame_id>base_sonar_02_link</frame_id>
     </sensor>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
@@ -329,7 +316,7 @@
     <sensor name="base_sonar_01" type="gpu_ray">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>5</update_rate>
-      <visualize>false</visualize>
+      <visualize>true</visualize>
       <ray>
         <scan>
           <horizontal>
@@ -356,18 +343,12 @@
           <stddev>0.005</stddev>
         </noise>
       </ray>
-      <plugin filename="libgazebo_ros_ray_sensor.so" name="base_sonar_01_gazebo_ros_range">
-        <ros>
-          <namespace></namespace>
-          <remapping>~/out:=sonar_base</remapping>
-        </ros>
-        <output_type>sensor_msgs/Range</output_type>
-        <radiation_type>ultrasound</radiation_type>
-        <frame_name>base_sonar_01_link</frame_name>
-      </plugin>
+      <topic>sonar_base_01</topic>
+      <frame_id>base_sonar_01_link</frame_id>
     </sensor>
     <material>Gazebo/DarkGrey</material>
   </gazebo>
+  
   <link name="base_mic_front_left_link"/>
   <joint name="base_mic_front_left_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.23182 0.03902 0.195"/>
@@ -901,14 +882,14 @@
   </gazebo>
   <!-- Odometry plugin for ground truth -->
   <gazebo>
-    <plugin filename="libgazebo_world_odometry.so" name="gazebo_ros_odometry">
-      <ros>
-        <namespace></namespace>
-      </ros>
-      <frame_name>world</frame_name>
-      <body_name>base_footprint</body_name>
-      <topic_name>ground_truth_odom</topic_name>
-      <update_rate>100.0</update_rate>
+    <plugin
+      filename="gz-sim-odometry-publisher-system"
+      name="gz::sim::systems::OdometryPublisher">
+      <odometry_frame>world</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <odom_topic>ground_truth_odom</odom_topic>
+      <odom_publish_frequency>100.0</odom_publish_frequency>
+      <dimensions>3</dimensions>
     </plugin>
   </gazebo>
   <!-- Bottom fixed part of column -->
@@ -1036,7 +1017,7 @@
       <!--<origin xyz="0.061191 ${reflect * -0.022397} -0.012835" rpy="0.00000 0.00000 0.00000"/>-->
       <origin rpy="0.00000 0.00000 0.00000" xyz="0.061191 -0.022397 0.012835"/>
       <mass value="1.563428"/>
-      <inertia ixx="0.002471" ixy="0.001809" ixz="-0.001202" iyy="0.006132" iyz="-0.000494" izz="0.006704"/>
+      <inertia ixx="0.002471" ixy="0.0" ixz="0.0" iyy="0.006132" iyz="0.0" izz="0.006704"/>
     </inertial>
     <!-- M90 module -->
     <visual>
@@ -1760,7 +1741,7 @@
     <parent link="gripper_left_base_link"/>
     <child link="gripper_left_left_inner_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.8757" velocity="2"/>
+    <limit effort="100.0" lower="0" upper="0.8757" velocity="2"/>
     <mimic joint="gripper_left_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -1769,7 +1750,7 @@
     <parent link="gripper_left_left_outer_finger"/>
     <child link="gripper_left_left_inner_finger"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="-0.8757" upper="0" velocity="2"/>
+    <limit effort="100.0" lower="-0.8757" upper="0" velocity="2"/>
     <mimic joint="gripper_left_finger_joint" multiplier="-1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -1784,7 +1765,7 @@
     <parent link="gripper_left_base_link"/>
     <child link="gripper_left_right_outer_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.81" velocity="2"/>
+    <limit effort="100.0" lower="0" upper="0.81" velocity="2"/>
     <mimic joint="gripper_left_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <joint name="gripper_left_right_outer_finger_joint" type="fixed">
@@ -1799,7 +1780,7 @@
     <parent link="gripper_left_base_link"/>
     <child link="gripper_left_right_inner_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.8757" velocity="2"/>
+    <limit effort="100.0" lower="0" upper="0.8757" velocity="2"/>
     <mimic joint="gripper_left_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -1808,7 +1789,7 @@
     <parent link="gripper_left_right_outer_finger"/>
     <child link="gripper_left_right_inner_finger"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="-0.8757" upper="0" velocity="2"/>
+    <limit effort="100.0" lower="-0.8757" upper="0" velocity="2"/>
     <mimic joint="gripper_left_finger_joint" multiplier="-1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -1866,7 +1847,7 @@
       <!--<origin xyz="0.061191 ${reflect * -0.022397} -0.012835" rpy="0.00000 0.00000 0.00000"/>-->
       <origin rpy="0.00000 0.00000 0.00000" xyz="0.061191 -0.022397 -0.012835"/>
       <mass value="1.563428"/>
-      <inertia ixx="0.002471" ixy="-0.001809" ixz="-0.001202" iyy="0.006132" iyz="0.000494" izz="0.006704"/>
+      <inertia ixx="0.002471" ixy="0.0" ixz="0.0" iyy="0.006132" iyz="0.0" izz="0.006704"/>
     </inertial>
     <!-- M90 module -->
     <visual>
@@ -2590,8 +2571,8 @@
     <parent link="gripper_right_base_link"/>
     <child link="gripper_right_left_inner_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.8757" velocity="2"/>
-    <mimic joint="gripper_right_finger_joint" multiplier="1" offset="0"/>
+    <limit effort="100.0" lower="0" upper="0.8757" velocity="2"/>
+   <mimic joint="gripper_right_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
   <joint name="gripper_right_left_inner_finger_joint" type="revolute">
@@ -2599,8 +2580,8 @@
     <parent link="gripper_right_left_outer_finger"/>
     <child link="gripper_right_left_inner_finger"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="-0.8757" upper="0" velocity="2"/>
-    <mimic joint="gripper_right_finger_joint" multiplier="-1" offset="0"/>
+    <limit effort="100.0" lower="-0.8757" upper="0" velocity="2"/>
+  <mimic joint="gripper_right_finger_joint" multiplier="-1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
   <joint name="gripper_right_left_inner_finger_pad_joint" type="fixed">
@@ -2614,8 +2595,8 @@
     <parent link="gripper_right_base_link"/>
     <child link="gripper_right_right_outer_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.81" velocity="2"/>
-    <mimic joint="gripper_right_finger_joint" multiplier="1" offset="0"/>
+    <limit effort="100.0" lower="0" upper="0.81" velocity="2"/>
+   <mimic joint="gripper_right_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <joint name="gripper_right_right_outer_finger_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0.0315 -0.0041"/>
@@ -2629,7 +2610,7 @@
     <parent link="gripper_right_base_link"/>
     <child link="gripper_right_right_inner_knuckle"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="0" upper="0.8757" velocity="2"/>
+    <limit effort="100.0" lower="0" upper="0.8757" velocity="2"/>
     <mimic joint="gripper_right_finger_joint" multiplier="1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -2638,7 +2619,7 @@
     <parent link="gripper_right_right_outer_finger"/>
     <child link="gripper_right_right_inner_finger"/>
     <axis xyz="1 0 0"/>
-    <limit effort="0.1" lower="-0.8757" upper="0" velocity="2"/>
+    <limit effort="100.0" lower="-0.8757" upper="0" velocity="2"/>
     <mimic joint="gripper_right_finger_joint" multiplier="-1" offset="0"/>
   </joint>
   <!-- <xacro:gazebo_ros2_control/> -->
@@ -2850,13 +2831,13 @@
     </inertial>
   </link>
   <gazebo reference="head_front_camera_color_frame">
-    <sensor name="head_front_camera_frame_sensor" type="depth">
+    <sensor name="head_front_camera_frame_sensor" type="rgbd_camera">
       <always_on>true</always_on>
       <update_rate>30.0</update_rate>
       <camera>
         <horizontal_fov>1.0995574287564276</horizontal_fov>
         <image>
-          <format>B8G8R8</format>
+          <format>R8G8B8</format>
           <width>640</width>
           <height>480</height>
         </image>
@@ -2872,403 +2853,232 @@
           <p2>0.00000001</p2>
         </distortion>
       </camera>
-      <plugin filename="libgazebo_ros_camera.so" name="head_front_camera_frame_controller">
-        <camera_name>head_front_camera</camera_name>
-        <ros>
-          <!-- <namespace>${name}</namespace>-->
-          <remapping>head_front_camera/image_raw:=head_front_camera/rgb/image_raw</remapping>
-          <remapping>head_front_camera/camera_info:=head_front_camera/rgb/camera_info</remapping>
-          <remapping>head_front_camera/depth/image_raw:=head_front_camera/depth/image_raw</remapping>
-          <remapping>head_front_camera/depth/camera_info:=head_front_camera/depth/camera_info</remapping>
-          <remapping>head_front_camera/points:=head_front_camera/depth/points</remapping>
-        </ros>
-        <frame_name>head_front_camera_color_optical_frame</frame_name>
-        <min_depth>0.3</min_depth>
-        <max_depth>8.0</max_depth>
-      </plugin>
+      <topic>head_front_camera</topic>
+      <frame_id>head_front_camera_color_optical_frame</frame_id>
     </sensor>
   </gazebo>
   <!-- ROS 2 control config-->
+ <!-- ROS 2 control config-->
   <ros2_control name="ros2_control_tiago_dual_system" type="system">
-    <!-- Execution env config -->
-    <hardware>
-      <plugin>robot_control/RobotControl</plugin>
-    </hardware>
-    <joint name="wheel_right_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-    </joint>
-    <transmission name="wheel_right_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="wheel_right_actuator" role="actuator1"/>
-      <joint name="wheel_right_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </joint>
-    </transmission>
-    <joint name="wheel_left_joint">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-    </joint>
-    <transmission name="wheel_left_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="wheel_left_actuator" role="actuator1"/>
-      <joint name="wheel_left_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </joint>
-    </transmission>
-    <joint name="torso_lift_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="torso_lift_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="torso_lift_actuator" role="actuator1"/>
-      <joint name="torso_lift_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_1_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_1_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_left_1_actuator" role="actuator1"/>
-      <joint name="arm_left_1_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_2_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_2_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_left_2_actuator" role="actuator1"/>
-      <joint name="arm_left_2_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_3_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_3_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_left_3_actuator" role="actuator1"/>
-      <joint name="arm_left_3_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_4_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_4_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_left_4_actuator" role="actuator1"/>
-      <joint name="arm_left_4_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_5_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_5_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_left_5_actuator" role="actuator1"/>
-      <joint name="arm_left_5_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_left_6_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="arm_left_7_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_left_6_arm_left_7_wrist_trans">
-      <plugin>transmission_interface/DifferentialTransmission</plugin>
-      <actuator name="arm_left_6_actuator" role="actuator1">
-        <mechanical_reduction>-1.0</mechanical_reduction>
-      </actuator>
-      <actuator name="arm_left_7_actuator" role="actuator2">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </actuator>
-      <joint name="arm_left_6_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-      <joint name="arm_left_7_joint" role="joint2">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="gripper_left_finger_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="gripper_left_right_outer_knuckle_joint">
-      <param name="mimic">gripper_left_finger_joint</param>
-      <param name="multiplier">1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_left_right_inner_knuckle_joint">
-      <param name="mimic">gripper_left_finger_joint</param>
-      <param name="multiplier">1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_left_right_inner_finger_joint">
-      <param name="mimic">gripper_left_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_left_left_inner_finger_joint">
-      <param name="mimic">gripper_left_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_left_left_inner_knuckle_joint">
-      <param name="mimic">gripper_left_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <transmission name="gripper_left_finger_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="gripper_left_finger_actuator" role="actuator1"/>
-      <joint name="gripper_left_finger_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </joint>
-    </transmission>
-    <joint name="arm_right_1_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_1_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_right_1_actuator" role="actuator1"/>
-      <joint name="arm_right_1_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_right_2_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_2_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_right_2_actuator" role="actuator1"/>
-      <joint name="arm_right_2_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_right_3_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_3_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_right_3_actuator" role="actuator1"/>
-      <joint name="arm_right_3_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_right_4_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_4_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_right_4_actuator" role="actuator1"/>
-      <joint name="arm_right_4_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_right_5_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_5_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="arm_right_5_actuator" role="actuator1"/>
-      <joint name="arm_right_5_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="arm_right_6_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="arm_right_7_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="arm_right_6_arm_right_7_wrist_trans">
-      <plugin>transmission_interface/DifferentialTransmission</plugin>
-      <actuator name="arm_right_6_actuator" role="actuator1">
-        <mechanical_reduction>-1.0</mechanical_reduction>
-      </actuator>
-      <actuator name="arm_right_7_actuator" role="actuator2">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </actuator>
-      <joint name="arm_right_6_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-      <joint name="arm_right_7_joint" role="joint2">
-        <mechanical_reduction>-1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="gripper_right_finger_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="gripper_right_right_outer_knuckle_joint">
-      <param name="mimic">gripper_right_finger_joint</param>
-      <param name="multiplier">1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_right_right_inner_knuckle_joint">
-      <param name="mimic">gripper_right_finger_joint</param>
-      <param name="multiplier">1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_right_right_inner_finger_joint">
-      <param name="mimic">gripper_right_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_right_left_inner_finger_joint">
-      <param name="mimic">gripper_right_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <joint name="gripper_right_left_inner_knuckle_joint">
-      <param name="mimic">gripper_right_finger_joint</param>
-      <param name="multiplier">-1</param>
-      <param name="offset">0</param>
-      <!-- Interfaces are handled automatically on Gazebo and Hardware -->
-    </joint>
-    <transmission name="gripper_right_finger_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="gripper_right_finger_actuator" role="actuator1"/>
-      <joint name="gripper_right_finger_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-      </joint>
-    </transmission>
-    <joint name="head_1_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="head_1_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="head_1_actuator" role="actuator1"/>
-      <joint name="head_1_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-    <joint name="head_2_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <transmission name="head_2_trans">
-      <plugin>transmission_interface/SimpleTransmission</plugin>
-      <actuator name="head_2_actuator" role="actuator1"/>
-      <joint name="head_2_joint" role="joint1">
-        <mechanical_reduction>1.0</mechanical_reduction>
-        <offset>0.0</offset>
-      </joint>
-    </transmission>
-  </ros2_control>
+  <!-- Execution env config -->
+  <hardware>
+    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+  </hardware>
+
+  <!-- Base Wheels -->
+  <joint name="wheel_right_joint">
+    <command_interface name="velocity"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="wheel_left_joint">
+    <command_interface name="velocity"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+
+  <!-- Torso Lift -->
+  <joint name="torso_lift_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <!-- Left Arm -->
+  <joint name="arm_left_1_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_2_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_3_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_4_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_5_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_6_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_left_7_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <!-- Left Gripper -->
+  <joint name="gripper_left_finger_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="gripper_left_right_outer_knuckle_joint">
+    <param name="mimic">gripper_left_finger_joint</param>
+    <param name="multiplier">1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_left_right_inner_knuckle_joint">
+    <param name="mimic">gripper_left_finger_joint</param>
+    <param name="multiplier">1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_left_right_inner_finger_joint">
+    <param name="mimic">gripper_left_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_left_left_inner_finger_joint">
+    <param name="mimic">gripper_left_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_left_left_inner_knuckle_joint">
+    <param name="mimic">gripper_left_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+
+  <!-- Right Arm -->
+  <joint name="arm_right_1_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_2_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_3_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_4_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_5_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_6_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="arm_right_7_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <command_interface name="effort"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <!-- Right Gripper -->
+  <joint name="gripper_right_finger_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="gripper_right_right_outer_knuckle_joint">
+    <param name="mimic">gripper_right_finger_joint</param>
+    <param name="multiplier">1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_right_right_inner_knuckle_joint">
+    <param name="mimic">gripper_right_finger_joint</param>
+    <param name="multiplier">1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_right_right_inner_finger_joint">
+    <param name="mimic">gripper_right_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_right_left_inner_finger_joint">
+    <param name="mimic">gripper_right_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+  <joint name="gripper_right_left_inner_knuckle_joint">
+    <param name="mimic">gripper_right_finger_joint</param>
+    <param name="multiplier">-1</param>
+    <param name="offset">0</param>
+  </joint>
+
+  <!-- Head -->
+  <joint name="head_1_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+  <joint name="head_2_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+</ros2_control>
 </robot>
